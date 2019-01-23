@@ -220,24 +220,13 @@
 
         glitch();
         window.setInterval(glitch, 100);
+
+        fetch('https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
+          + encodeURIComponent('https://myanimelist.net/animelist/LostOfThought')
+        ).then( (response) => {return response.text(); } ).then( (response) => {
+          document.getElementById('content').insertAdjacentHTML('afterend', response);
+        });
       }
-
-function getURL(url, callback) {   
-
-  var xobj = new XMLHttpRequest();
-  xobj.open('GET', url, true); // Replace 'my_data' with the path to your file
-  xobj.onreadystatechange = function () {
-    if (xobj.readyState == 4 && xobj.status == "200") {
-      // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-      callback(xobj.responseText);
-    }
-  };
-  xobj.send(null);
-}
-
-getURL('https://myanimelist.net/animelist/LostOfThought', function (response){
-  console.log(response);
-});
     </script>
   </head>
 
@@ -245,7 +234,7 @@ getURL('https://myanimelist.net/animelist/LostOfThought', function (response){
     <canvas id='noise'></canvas>
     <div id='content'>
       <div> 
-        <object type="text/html" data="https://myanimelist.net/animelist/LostOfThought" width="800px" height="600px" style="overflow:auto;border:5px ridge blue">
+        <!-- <object type="text/html" data="https://myanimelist.net/animelist/LostOfThought" width="800px" height="600px" style="overflow:auto;border:5px ridge blue"> -->
         </object>
       </div>
     </div>
