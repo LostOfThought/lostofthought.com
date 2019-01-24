@@ -224,7 +224,8 @@
         fetch('https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
           + encodeURIComponent('https://myanimelist.net/animelist/LostOfThought')
         ).then( (response) => {return response.text(); } ).then( (response) => {
-          document.getElementById('content').insertAdjacentHTML('afterend', response);
+          let match = /<div id="list_surround">(.*)<div id="copyright"/s.exec(response);
+          document.getElementById('content').innerHTML = match[1];
         });
       }
     </script>
@@ -234,8 +235,6 @@
     <canvas id='noise'></canvas>
     <div id='content'>
       <div> 
-        <!-- <object type="text/html" data="https://myanimelist.net/animelist/LostOfThought" width="800px" height="600px" style="overflow:auto;border:5px ridge blue"> -->
-        </object>
       </div>
     </div>
   </body>
