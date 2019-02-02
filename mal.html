@@ -23,7 +23,10 @@
     #content {
       display: flex;
       flex-flow: row wrap;
+      width: 80%;
     }
+
+     #content > * { flex: 0 1 auto }
 
     .info_block {
       display: inline-block;
@@ -55,7 +58,7 @@
     }
 
     </style>
-    <script type="text/javascript" src="./malparse.js"></script>
+    <script type="module" src="./malparse.js"></script>
   </head>
   <body>
     <div id='content' />

@@ -1,3 +1,6 @@
+import { GetCache, SetCache, TryCache } from './cache.js';
+
+
 let getNodeText = (node) => {
   if(!node){
     return null;
@@ -5,123 +8,161 @@ let getNodeText = (node) => {
   return node.innerText.trim();
 };
 
+function DeferedPromise(){
+  let res;
+  let rej;
+  let promise = new Promise((resolve, reject) => {
+    res = resolve;
+    rej = reject;
+  });
+  promise.resolve = res;
+  promise.reject = rej;
+  return promise;
+}
+
+function GetKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
+}
+
+class WebRequestParams {
+  
+}
+
+class WebRequest {
+  url;
+  request;
+  promise;
+  constructor(url, params){
+    this.url = url;
+    this.promise = DeferedPromise();
+    this.request = new XMLHttpRequest();
+    this.request.onabort   = () => {
+      this.promise.reject('Abort');
+    };
+    this.request.onerror   = () => {
+      this.promise.reject('Error');
+    };
+    this.request.onload    = () => {
+      if (this.request.status >= 200 && this.request.status < 300) {
+        this.promise.resolve(this);
+      } else {
+        this.promise.reject('Status != 2xx: ' + this.GetStatus());
+      }
+    };
+    //this.request.onloadstart;
+    //this.request.onprogress;
+    this.request.ontimeout = () => {
+      this.promise.reject('timeout')
+    };
+    //this.request.onloadend;
+  
+    //request.onreadystatechange; //EventHandler
+  }
+  static ReadyState = Object.freeze({
+    0: 'UNSENT',
+    1: 'OPENED',
+    2: 'HEADERS_RECEIVED',
+    3: 'LOADING',
+    4: 'DONE'
+  });
+  static Method = Object.freeze({
+    'GET'    : Symbol(),
+    'HEAD'   : Symbol(),
+    'POST'   : Symbol(),
+    'PUT'    : Symbol(),
+    'DELETE' : Symbol(),
+    'CONNECT': Symbol(),
+    'OPTIONS': Symbol(),
+    'TRACE'  : Symbol(),
+    'PATCH'  : Symbol()
+  });
+  GetReadyState() {
+    return { code: this.request.readyState, string: WebRequest.ReadyState[this.request.readyState] };
+  }
+  GetStatus() {
+    return { code: this.request.status, string: WebRequest.Status[this.request.status] };
+  }
+  Abort() {
+    this.request.abort();
+  }
+  GetResponseHeaders() {
+    let headers = this.request.getAllResponseHeaders();
+    if(headers){
+      let ret = {};
+      headers.split('\r\n').forEach((line) => {
+        let header = line.split(': ', 2);
+        ret[header[0]] = header[1].split(', ');
+      });
+      return ret;
+    } else {
+      return {};
+    }
+  }
+  Open(method, url, async, user, password) {
+    this.request.open(
+      GetKeyByValue(WebRequest.Method, method),
+      this.url,
+      true,
+      user,
+      password
+    );
+    return this.promise;
+  }
+  /*
+    //XMLHttpRequestEventTarget
+    onabort
+    onerror
+    onload
+    onloadstart
+    onprogress
+    ontimeout
+    onloadend
+    
+    //EventTarget
+    addEventListener
+    removeEventListener
+    dispatchEvent
+
+    //XMLHttpRequest
+    onreadystatechange
+    */
+}
+
+function CacheURL(url, ttl){
+  return TryCache(
+    url,
+    ttl,
+    new Promise((resolve, reject) => {
+      let req = new XMLHttpRequest();
+      req.open('GET', url);
+      req.send();
+      req.addEventListener('load', () => {
+        resolve(req.responseText);
+      });
+    })
+  );
+};
+
+function StrToEl(s){
+  let el = document.createElement('div');
+  el.innerHTML = s;
+  return el;
+}
+
 window.onload = () => {
-  fetch('https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
+  let req = new WebRequest( 'https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
+    + encodeURIComponent('https://myanimelist.net/animelist/LostOfThought')
+    + '&cache=false');
+  req.Open(WebRequest.Method.GET).then((fin) => {
+    console.log(fin.request.responseText);
+  });
+  CacheURL(
+    'https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
     + encodeURIComponent('https://myanimelist.net/animelist/LostOfThought')
     + '&cache=false'
-  ).then( (response) => {return response.text(); } ).then( (response) => {
-    let remote = document.createElement('div');
-    remote.innerHTML = /<div id="list_surround">(.*)<div id="copyright"/s.exec(response)[1];
-    let headers = remote.querySelectorAll('table[class^="header_"]');
-    let list = [];
-    headers.forEach((v, i, a) => {
-      let animes = [];
-      let tr = v.nextElementSibling;
-      tr = v.nextElementSibling;
-      while(tr){
-        if(tr.matches('table') && (!tr.querySelector('td[class="table_header"]'))){
-          let tds = tr.querySelectorAll('td');
-          if(!tds[1]){ // Summary
-            let status = v.className.split('_')[1];
-            animes.forEach((v) => {
-              v.status = status;
-              if(status === 'completed'){
-                let progress = parseInt(v.progress); 
-                v.progress = {
-                  completed: progress,
-                  total    : progress
-                }
-              } else {
-                let progress = v.progress.split('/').map((e) => {
-                  let v = parseInt(e);
-                  return isNaN(v) ? null : v;
-                });
-                v.progress = {
-                  completed: progress[0],
-                  total    : progress[1]
-                }
-              }
-              list.push(v);
-            });
-            return;
-          }
-          let href = tds[1].querySelector('a[class="animetitle"]').getAttribute('href');
-          animes.push({
-            id      : parseInt(/^\/anime\/(\d+)/i.exec(href)[1]),
-            title   : getNodeText(tds[1].querySelector('span')),
-            score   : function(){
-                        let v = getNodeText(tds[2]);
-                        return v === '-' ? null : v;
-                      }(),
-            type    : getNodeText(tds[3]),
-            progress: getNodeText(tds[4]), // Processed in Summary
-            rating  : getNodeText(tds[5]),
-            start   : function(){
-                        let v = getNodeText(tds[6]);
-                        return v === '' ? null : v;
-                      }(),
-            finish   : function(){
-                        let v = getNodeText(tds[7]);
-                        return v === '' ? null : v;
-                      }(),
-          });
-        }
-        tr = tr.nextElementSibling;
-      }
-    }); 
-    let content = document.getElementById('content');
-    //content.style['white-space'] = 'pre';
-    //content.innerText = JSON.stringify(list, null, 2);
-    let minW = 1000;
-    let minH = 1000;
-    let css = document.createElement('style');
-    content.insertAdjacentElement('afterend', css);
-    list.forEach((anime) => {
-      fetch('https://us-central1-lostofthought-com.cloudfunctions.net/cors?url='
-        + encodeURIComponent('https://myanimelist.net/anime/' + anime.id )
-      ).then( (response) => { return response.text(); } ).then( (response) => {
-        let remote = document.createElement('div');
-        remote.innerHTML = /<div id="contentWrapper"[^>]+>(.*)<!-- end of contentWrapper -->/s.exec(response)[1];
-        anime.title = {
-          original: anime.title,
-          english : document.evaluate(
-            '//span[contains(text(),"English")]/following-sibling::text()',
-            remote, null, XPathResult.STRING_TYPE).stringValue.trim(),
-          japanese: document.evaluate(
-            '//span[contains(text(),"Japanese")]/following-sibling::text()',
-            remote, null, XPathResult.STRING_TYPE).stringValue.trim(),
-          synonyms: document.evaluate(
-            '//span[contains(text(),"Japanese")]/following-sibling::text()',
-            remote, null, XPathResult.STRING_TYPE).stringValue.trim()
-        };
-        console.log(anime);
-        let elem = document.createElement('div');
-        elem.classList.add('info_block');
-        if(anime.rating === 'Rx'){
-          elem.classList.add('adult');
-        }
-        let image = document.createElement('img');
-        image.src = remote.querySelector('img[itemprop="image"]').getAttribute('src');
-        image.onload = () => {
-          minW = (minW > image.naturalWidth ? image.naturalWidth : minW);
-          minH = (minH > image.naturalHeight ? image.naturalHeight : minH);
-          css.innerHTML = '.info_block { width: ' + minW + 'px; height: ' + minH + 'px; overflow: hidden} #content > * { flex: 0 1 auto }'
-        };
-        //elem.insertAdjacentElement('beforeend', image);
-        elem.setAttribute('style', 'background-image: url("' + image.src + '");');
-        let title = document.createElement('h3');
-        title.textContent = anime.title.english || anime.title.original;
-        title.onclick = () => {
-          window.location.href = 'https://myanimelist.net/anime/' + anime.id;
-        }
-        elem.insertAdjacentElement('beforeend', title);
-        switch(anime.status){
-          case 'completed': elem.classList.add('completed'); break;
-          case 'cw': elem.classList.add('watching'); break;
-          case 'ptw': elem.classList.add('planToWatch'); break;
-        }
-        content.insertAdjacentElement('beforeend', elem);
-      });
-    });
+  , 10000
+  ).then((response) => {
+    let remote = StrToEl(/<div id="list_surround">(.*)<div id="copyright"/s.exec(response.data));
+    console.log(remote)
   });
 }
