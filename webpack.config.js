@@ -1,16 +1,19 @@
 const path = require('path');
+const fs = require('fs');
+const glob = require("glob")
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
   mode: "development",
+  devtool: 'source-map',
   resolve: {
     extensions: ['.ts', '.js']
   },
-  entry: {
-    main: path.resolve(__dirname, 'src/main.ts')
-  },
+  entry: {},
   output: {
-    filename: 'main.js',
+    filename: '[name].bundle.js',
     path: path.resolve(__dirname, 'docs')
   },
   module: {
@@ -22,7 +25,8 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             "presets": [
-              "@babel/typescript"
+              "@babel/typescript",
+              "minify"
             ],
             "plugins": [
               "@babel/proposal-class-properties",
@@ -30,11 +34,69 @@ module.exports = {
             ]
           }
         }
+      },
+      {
+        test: /\.scss$/,
+        exclude: /(node_modules|bower_components)/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              sourceMap: true
+            }
+          }, {
+            loader: "sass-loader",
+            options: {
+              sourceMap: true
+            }
+          }
+        ]
       }
     ]
   },
   plugins: [
-    new HtmlWebpackPlugin()
-  ]
+    new CopyWebpackPlugin([{
+      from: 'static'
+    }]),
+    new MiniCssExtractPlugin({
+      filename: '[name].css',
+      chunkFilename: '[id].css'
+    })
+  ],
+  optimization: {
+    splitChunks: {
+      chunks: 'async',
+      minSize: 30000,
+      maxSize: 0,
+      minChunks: 1,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      automaticNameDelimiter: '~',
+      name: true,
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true
+        }
+      }
+    }
+  }
 }
 
+glob.sync('./src/**/main.ts').forEach((filepath) => {
+  let chunk = /^\.\/src\/(.+)\/main\.ts/.exec(filepath) || [,'_null_'];
+  chunk = chunk[1];
+  module.exports.entry[chunk] = filepath;
+  module.exports.plugins.push(new HtmlWebpackPlugin({
+    inject: true,
+    chunks: [chunk],
+    filename: chunk + '.html'
+  }));
+});
+console.log(module.exports.entry);
