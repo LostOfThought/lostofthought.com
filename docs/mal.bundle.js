@@ -81,50 +81,42 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/index/main.ts");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/mal/main.ts");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./src/index/main.ts":
-/*!***************************!*\
-  !*** ./src/index/main.ts ***!
-  \***************************/
+/***/ "./src/mal/main.ts":
+/*!*************************!*\
+  !*** ./src/mal/main.ts ***!
+  \*************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./style.scss */ "./src/index/style.scss");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./style.scss */ "./src/mal/style.scss");
 /* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_style_scss__WEBPACK_IMPORTED_MODULE_0__);
 console.log('Hi');
 
 
-function throwNull(v) {
-  if (v == null) {
-    throw new Error('null variable');
-  }
-
-  return v;
-}
-
 function onLoad() {
-  document.title = 'lostofthought.com';
   document.body.innerHTML = `
-  <canvas id="noise"></canvas>
-  <div id="content">
-    <h1 id="title"><span class="glitch">Wel</span>co<span class="glitch-compact">m</span>e t<span class="glitch-compact">o</span><br/><span class="glitch-rand">lostofthought.com</span></h1>
-    <h2 id="subtitle">A<span class="glitch-compact">r</span>e <span class="glitch-compact">y</span>ou <span class="glitch-rand">lost?</span></h2>
-  </div>`;
-  let canvas = throwNull(document.getElementById('noise'));
-  let ctx = throwNull(canvas.getContext('2d'));
+            <canvas id="noise"></canvas>
+<div id="content">
+	<h1 id="title"><span class="glitch">Wel</span>co<span class="glitch-compact">m</span>e t<span class="glitch-compact">o</span><br/><span class="glitch-rand">lostofthought.com</span></h1>
+	<h2 id="subtitle">A<span class="glitch-compact">r</span>e <span class="glitch-compact">y</span>ou <span class="glitch-rand">lost?</span></h2>
+</div>
+`;
+  var canvas = document.getElementById('noise');
+  var ctx = canvas.getContext('2d');
   window.addEventListener('resize', resizeCanvas, false);
-  let canvasData = [];
+  var canvasData = [];
   canvasData.length = 15;
-  let rng;
+  var rng;
 
   if (typeof window.crypto.getRandomValues === "function") {
-    let array = new Uint32Array(1);
+    var array = new Uint32Array(1);
     window.crypto.getRandomValues(array);
     rng = array[0] | 0;
   } else {
@@ -138,19 +130,19 @@ function onLoad() {
     return rng;
   }
 
-  let canvasIndex = 0;
+  var canvasIndex = 0;
 
   function resizeCanvas() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    for (let i = 0; i < canvasData.length; i++) {
+    for (var i = 0; i < canvasData.length; i++) {
       canvasData[i] = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      for (let y = 0; y < canvasData[i].height; y++) {
-        for (let x = 0; x < canvasData[i].width; x++) {
-          const index = (x + y * canvasData[i].width) * 4;
-          const bits = next();
+      for (var y = 0; y < canvasData[i].height; y++) {
+        for (var x = 0; x < canvasData[i].width; x++) {
+          var index = (x + y * canvasData[i].width) * 4;
+          var bits = next();
           canvasData[i].data[index] = bits >> 24 & 0xFF;
           canvasData[i].data[index + 1] = bits >> 16 & 0xFF;
           canvasData[i].data[index + 2] = bits >> 8 & 0xFF;
@@ -173,10 +165,10 @@ function onLoad() {
   }
 
   function splitGlitch(element) {
-    let chars = element.innerText.split('');
+    var chars = element.innerText.split('');
     element.innerText = '';
     chars.forEach(function (char) {
-      let split = document.createElement('span');
+      var split = document.createElement('span');
       element.appendChild(split);
       split.classList.add('glitch-split');
       split.setAttribute('data-char', char);
@@ -201,33 +193,33 @@ function onLoad() {
 
           case 2:
             split.classList.remove('glitch-split');
-            split.removeAttribute('data-char');
+            split.removeAttribute('data-char', char);
             split.innerText = char;
             break;
         }
       }
 
-      const computed = window.getComputedStyle(split);
+      var computed = window.getComputedStyle(split);
       split.style.width = computed.width;
       split.style.height = computed.height;
       split.innerText = char;
     });
   }
 
-  let glitchClasses = document.querySelectorAll('.glitch, .glitch-compact, .glitch-rand');
+  var glitchClasses = [].concat(Array.from(document.getElementsByClassName('glitch')), Array.from(document.getElementsByClassName('glitch-compact')), Array.from(document.getElementsByClassName('glitch-rand')));
   glitchClasses.forEach(splitGlitch);
-  let glitchElements = document.getElementsByClassName('glitch-split');
-  let num = 32;
+  var glitchElements = document.getElementsByClassName('glitch-split');
+  var num = 32;
 
   function glitch() {
     Array.prototype.forEach.call(glitchElements, function (element) {
       switch (Math.floor(Math.random() * 5)) {
         case 0:
-          element.innerText = (element.getAttribute('data-char') || '').toLowerCase();
+          element.innerText = element.getAttribute('data-char').toLowerCase();
           break;
 
         case 1:
-          element.innerText = (element.getAttribute('data-char') || '').toUpperCase();
+          element.innerText = element.getAttribute('data-char').toUpperCase();
           break;
 
         case 2:
@@ -240,7 +232,7 @@ function onLoad() {
           break;
 
         default:
-          element.innerText = element.getAttribute('data-char') || '';
+          element.innerText = element.getAttribute('data-char');
       }
     });
   }
@@ -255,10 +247,10 @@ window.addEventListener("load", onLoad);
 
 /***/ }),
 
-/***/ "./src/index/style.scss":
-/*!******************************!*\
-  !*** ./src/index/style.scss ***!
-  \******************************/
+/***/ "./src/mal/style.scss":
+/*!****************************!*\
+  !*** ./src/mal/style.scss ***!
+  \****************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -267,4 +259,4 @@ window.addEventListener("load", onLoad);
 /***/ })
 
 /******/ });
-//# sourceMappingURL=index.bundle.js.map
+//# sourceMappingURL=mal.bundle.js.map

@@ -17,7 +17,7 @@ function DeferedPromise(){
   });
   promise.resolve = res;
   promise.reject = rej;
-  return promise;
+  return { promise, res, rej } ;
 }
 
 function GetKeyByValue(object, value) {
@@ -28,16 +28,10 @@ class WebRequestParams {
   
 }
 
-class WebRequest {
-  url;
-  request;
-  promise;
-  constructor(url, params){
-    this.url = url;
-    this.promise = DeferedPromise();
-    this.request = new XMLHttpRequest();
-    this.request.onabort   = () => {
-      this.promise.reject('Abort');
+function WebRequest(url, params){
+    request = new XMLHttpRequest();
+    request.onabort   = () => {
+      promise.reject('Abort');
     };
     this.request.onerror   = () => {
       this.promise.reject('Error');

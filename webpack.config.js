@@ -1,9 +1,10 @@
 const path = require('path');
-const fs = require('fs');
 const glob = require("glob")
+const os = require('os')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   mode: "development",
@@ -25,8 +26,8 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             "presets": [
-              "@babel/typescript",
-              "minify"
+              "@babel/typescript"/*,
+              "minify"*/
             ],
             "plugins": [
               "@babel/proposal-class-properties",
@@ -65,6 +66,17 @@ module.exports = {
     })
   ],
   optimization: {
+    minimizer: [
+      new TerserPlugin({
+        test: /\.js(\?.*)?$/i,
+        cache: false,
+        parallel: os.cpus().length - 1,
+        sourceMap: true, // Must be set to true if using source-maps in production
+        terserOptions: {
+          // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
+        }
+      }),
+    ],
     splitChunks: {
       chunks: 'async',
       minSize: 30000,
