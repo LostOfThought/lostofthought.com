@@ -1,19 +1,21 @@
-*
-!.gitignore
+/*
+!/.gitignore
 
-!src/
-!docs/
-!static/
-!functions/
+!/src/**
+!/docs/**
+!/static/**
+!/functions/**
+/functions/node_modules/**
 
-!LICENSE
-!README.md
+!/LICENSE
+!/README.md
 
-!package.json
-!package-lock.json
+!/package.json
+!/package-lock.json
 
-!webpack.config.js
+!/webpack.config.js
 
-!tsconfig.json
+!/tsconfig.json
 
-!.firebaserc
+!/.firebaserc
+!/firebase.json
