@@ -201,20 +201,18 @@
           element.appendChild(split);
           split.classList.add('glitch-split');
           split.setAttribute('data-char', char);
-          if(element.classList.contains('glitch')){
-            switch(Math.floor(Math.random() * 3)){
-              case 0:
-                split.innerText = char.toUpperCase();
-                break;
-              case 1:
-                split.innerText = char.toLowerCase();
-                break;
-              case 2:
-                split.classList.remove('glitch-split');
-                split.removeAttribute('data-char');
-                split.innerText = char;
-                break;
-            }
+          switch(Math.floor(Math.random() * 3)){
+            case 0:
+              split.innerText = char.toUpperCase();
+              break;
+            case 1:
+              split.innerText = char.toLowerCase();
+              break;
+            case 2:
+              split.classList.remove('glitch-split');
+              split.removeAttribute('data-char');
+              split.innerText = char;
+              break;
           }
 
           const computed = window.getComputedStyle(split);
@@ -242,13 +240,15 @@
               element.innerText = String.fromCharCode(Math.floor(Math.random() * (TILDE - SPACE)) + SPACE + 1);
               break;
             case 3:
-              if(element.classList.contains('outline')) {
-                element.classList.remove('outline');
-              } else {
-                element.classList.add('outline');
-              }
+              element.classList.add('outline');
+              break;
             default:
               element.innerText = element.getAttribute('data-char');
+          }
+          if(Math.random() > 0.5){
+            if(element.classList.contains('outline')) {
+              element.classList.remove('outline');
+            }
           }
         });
       }
