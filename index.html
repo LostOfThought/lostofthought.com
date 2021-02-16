@@ -2,233 +2,239 @@
 
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta name='description' content='Personal website of Ryan "LostOfThought" Wright'/>
-	<title>lostofthought.com</title>
-	<style>
-		@import url('https://fonts.googleapis.com/css?family=Abel');
+  <meta charset="utf-8">
+  <meta name='description' content='Personal website of Ryan "LostOfThought" Wright'/>
+  <title>lostofthought.com</title>
+  <style>
+      @import url('https://fonts.googleapis.com/css?family=Abel');
 
-		* {
-			margin:0;
-			padding:0;
-		}
+      * {
+          margin:0;
+          padding:0;
+      }
 
-		html, body {
-			width:100%;
-			height:100%;
-			font-family: 'Abel', sans-serif;
-		}
+      html, body {
+          width:100%;
+          height:100%;
+          font-family: 'Abel', sans-serif;
+      }
 
-		body {
-			background: #000000;
-			text-align: center;
-		}
+      body {
+          background: #000000;
+          text-align: center;
+      }
 
-		#noise {
-			display: block;
-			position:fixed;
-			top:0;
-			left:0;
-			height: 100vh;
-			width: 100vw;
-			z-index: -1;
-		}
+      #noise {
+          display: block;
+          position:fixed;
+          top:0;
+          left:0;
+          height: 100vh;
+          width: 100vw;
+          z-index: -1;
+      }
 
-		#content {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%,-50%);
-			display: inline-block;
-		}
+      #content {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%,-50%);
+          display: inline-block;
+      }
 
-		#title, #subtitle {
-			white-space: nowrap;
-		}
+      #title, #subtitle {
+          white-space: nowrap;
+      }
 
-		#title {
-			font-size: 5em
-		}
+      #title {
+          font-size: 5em
+      }
 
-		#subtitle {
-			font-size: 4em
-		}
+      #subtitle {
+          font-size: 4em
+      }
 
-		.glitch-split {
-			text-align: center;
-			display: inline-block;
-		}
-	</style>
-	<script>
-        function onLoad() {
-
-            // Pink noise shamelessly stollen from:
-			// https://noisehack.com/generate-noise-web-audio-api/
-            var audioContext = new AudioContext();
-            var bufferSize = 4096;
-            var pinkNoise = (function() {
-                var b0, b1, b2, b3, b4, b5, b6;
-                b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-                var node = audioContext.createScriptProcessor(bufferSize, 1, 1);
-                node.onaudioprocess = function(e) {
-                    var output = e.outputBuffer.getChannelData(0);
-                    for (var i = 0; i < bufferSize; i++) {
-                        var white = Math.random() * 2 - 1;
-                        b0 = 0.99886 * b0 + white * 0.0555179;
-                        b1 = 0.99332 * b1 + white * 0.0750759;
-                        b2 = 0.96900 * b2 + white * 0.1538520;
-                        b3 = 0.86650 * b3 + white * 0.3104856;
-                        b4 = 0.55000 * b4 + white * 0.5329522;
-                        b5 = -0.7616 * b5 - white * 0.0168980;
-                        output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-                        output[i] *= 0.11; // (roughly) compensate for gain
-						///
-                        output[i] *= 0.1
-						///
-                        b6 = white * 0.115926;
-                    }
-                }
-                return node;
-            })();
-
-            pinkNoise.connect(audioContext.destination);
-
-            var canvas = document.getElementById('noise');
-            var ctx = canvas.getContext('2d');
-
-            window.addEventListener('resize', resizeCanvas, false);
-            var canvasData = [];
-            canvasData.length = 15;
-
-            var rng;
-            if(typeof window.crypto.getRandomValues === "function"){
-                var array = new Uint32Array(1);
-                window.crypto.getRandomValues(array);
-                rng = array[0]|0;
-			} else {
-                rng = (Math.random() * Math.pow(2, 32))|0;
-			}
-            function next(){
-                rng ^= rng << 13;
-                rng ^= rng >> 17;
-                rng ^= rng << 5;
-                return rng;
-            }
-
-            var canvasIndex = 0;
-            function resizeCanvas() {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-                for(var i = 0; i < canvasData.length; i++){
-                    canvasData[i] = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    for(var y = 0; y < canvasData[i].height; y++){
-                        for(var x = 0; x < canvasData[i].width; x++){
-                            var index = (x + y * canvasData[i].width) * 4;
-                            var bits = next();
-                            canvasData[i].data[index    ] = (bits >> 24 & 0xFF);
-                            canvasData[i].data[index + 1] = (bits >> 16 & 0xFF);
-                            canvasData[i].data[index + 2] = (bits >>  8 & 0xFF);
-                            canvasData[i].data[index + 3] = (bits >>  0 & 0xFF);
-                        }
-                    }
-                }
-                draw();
-            }
-
-            resizeCanvas();
-            function draw(){
-                if(++canvasIndex >= canvasData.length){
-                    canvasIndex = 0;
-                }
-                ctx.putImageData(canvasData[canvasIndex], 0, 0);
-            }
-
-            function splitGlitch(element) {
-                var chars = element.innerText.split('');
-                element.innerText = '';
-                chars.forEach(function(char) {
-                    var split = document.createElement('span');
-
-                    element.appendChild(split);
-                    split.classList.add('glitch-split');
-                    split.setAttribute('data-char', char);
-
-                    if(element.classList.contains('glitch')){
-                        split.innerText = char.toUpperCase();
-                    }
-                    if(element.classList.contains('glitch-compact')){
-                        split.innerText = char.toLowerCase();
-                    }
-                    if(element.classList.contains('glitch-rand')){
-                        switch(Math.floor(Math.random() * 3)){
-						case 0:
-							split.innerText = char.toUpperCase();
-							break;
-						case 1:
-							split.innerText = char.toLowerCase();
-							break;
-						case 2:
-						    split.classList.remove('glitch-split');
-                            split.removeAttribute('data-char', char);
-							split.innerText = char;
-							break;
-						}
-                    }
-
-                    var computed = window.getComputedStyle(split);
-                    split.style.width = computed.width;
-                    split.style.height = computed.height;
-
-                    split.innerText = char;
-                });
-            }
-
-            var glitchClasses = [].concat(
-                Array.from(document.getElementsByClassName('glitch'))
-					, Array.from(document.getElementsByClassName('glitch-compact'))
-					, Array.from(document.getElementsByClassName('glitch-rand'))
-			);
-			glitchClasses.forEach(splitGlitch);
-
-            var glitchElements = document.getElementsByClassName('glitch-split');
-
-            var num = 32;
-            function glitch(){
-                Array.prototype.forEach.call(glitchElements, function (element) {
-                    switch(Math.floor(Math.random() * 5)){
-                        case 0:
-                            element.innerText = element.getAttribute('data-char').toLowerCase();
-                            break;
-                        case 1:
-                            element.innerText = element.getAttribute('data-char').toUpperCase();
-                            break;
-                        case 2:
-                            element.innerText = String.fromCharCode(Math.floor(Math.random() * (93)) + 33);
-                            //element.innerText = String.fromCharCode(num++);
-                            if(num === 94){
-                                num = 32
-							}
-                            break;
-						default:
-                            element.innerText = element.getAttribute('data-char');
-                    }
-                });
-            }
-
-            draw();
-            window.setInterval(draw, 16);
-
-            glitch();
-            window.setInterval(glitch, 100);
+      .glitch-split {
+          text-align: center;
+          display: inline-block;
+      }
+  </style>
+  <script>
+    function hasGlyph(char, element) {
+      let canvas = document.getElementById('noise');
+      let ctx = canvas.getContext('2d');
+      ctx.font = '256px' + window.getComputedStyle( element, null ).getPropertyValue('font-family');
+      let measure = ctx.measureText(char);
+      return measure.actualBoundingBoxLeft !== 0
+        || measure.actualBoundingBoxRight !== 0
+        || measure.actualBoundingBoxAscent !== 0
+        || measure.actualBoundingBoxDescent !== 0;
+    }
+    const SPACE = ' '.codePointAt(0);
+    const TILDE = '~'.codePointAt(0);
+    function onHornClick() {
+      // Pink noise shamelessly stollen from:
+      // https://noisehack.com/generate-noise-web-audio-api/
+      const audioContext = new AudioContext();
+      const bufferSize = 4096;
+      const pinkNoise = (function () {
+        let b0, b1, b2, b3, b4, b5, b6;
+        b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+        const node = audioContext.createScriptProcessor(bufferSize, 1, 1);
+        node.onaudioprocess = function (e) {
+          const output = e.outputBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            output[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+            output[i] *= 0.11; // (roughly) compensate for gain
+            ///
+            output[i] *= 0.1
+            ///
+            b6 = white * 0.115926;
+          }
         }
-	</script>
+        return node;
+      })();
+
+      pinkNoise.connect(audioContext.destination);
+    }
+    function onLoad() {
+      const canvas = document.getElementById('noise');
+      const ctx = canvas.getContext('2d');
+
+      window.addEventListener('resize', resizeCanvas, false);
+      let canvasData = [];
+      canvasData.length = 15;
+
+      let rng;
+      if(typeof window.crypto.getRandomValues === "function"){
+        let array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        rng = array[0]|0;
+      } else {
+        rng = (Math.random() * Math.pow(2, 32))|0;
+      }
+      function next(){
+        rng ^= rng << 13;
+        rng ^= rng >> 17;
+        rng ^= rng << 5;
+        return rng;
+      }
+
+      let canvasIndex = 0;
+
+      function resizeCanvas() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        for(let i = 0; i < canvasData.length; i++){
+          canvasData[i] = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          for(let y = 0; y < canvasData[i].height; y++){
+            for(let x = 0; x < canvasData[i].width; x++){
+              const index = (x + y * canvasData[i].width) * 4;
+              const bits = next();
+              canvasData[i].data[index    ] = (bits >> 24 & 0xFF);
+              canvasData[i].data[index + 1] = (bits >> 16 & 0xFF);
+              canvasData[i].data[index + 2] = (bits >>  8 & 0xFF);
+              canvasData[i].data[index + 3] = (bits >>  0 & 0xFF); // Unpacking for alpha to darken things up a bit
+            }
+          }
+        }
+        draw();
+      }
+
+      resizeCanvas();
+      function draw(){
+        if(++canvasIndex >= canvasData.length){
+          canvasIndex = 0;
+        }
+        ctx.putImageData(canvasData[canvasIndex], 0, 0);
+      }
+
+      function splitGlitch(element) {
+        const chars = element.innerText.split('');
+        element.innerText = '';
+        chars.forEach(function(char) {
+          if(char === '\n'){
+            element.appendChild(document.createElement('br'));
+            return;
+          }
+          if(!hasGlyph(char, element)){
+            let span = document.createElement('span');
+            span.innerText = char;
+            element.appendChild(span);
+            return;
+          }
+          const split = document.createElement('span');
+
+          element.appendChild(split);
+          split.classList.add('glitch-split');
+          split.setAttribute('data-char', char);
+          if(element.classList.contains('glitch')){
+            switch(Math.floor(Math.random() * 3)){
+              case 0:
+                split.innerText = char.toUpperCase();
+                break;
+              case 1:
+                split.innerText = char.toLowerCase();
+                break;
+              case 2:
+                split.classList.remove('glitch-split');
+                split.removeAttribute('data-char');
+                split.innerText = char;
+                break;
+            }
+          }
+
+          const computed = window.getComputedStyle(split);
+          split.style.width = computed.width;
+          split.style.height = computed.height;
+
+          split.innerText = char;
+        });
+      }
+
+      Array.from(document.getElementsByClassName('glitch')).forEach(splitGlitch);
+
+      const glitchElements = document.getElementsByClassName('glitch-split');
+
+      function glitch(){
+        Array.prototype.forEach.call(glitchElements, function (element) {
+          switch(Math.floor(Math.random() * 5)){
+            case 0:
+              element.innerText = element.getAttribute('data-char').toLowerCase();
+              break;
+            case 1:
+              element.innerText = element.getAttribute('data-char').toUpperCase();
+              break;
+            case 2:
+              element.innerText = String.fromCharCode(Math.floor(Math.random() * (TILDE - SPACE)) + SPACE + 1);
+              break;
+            default:
+              element.innerText = element.getAttribute('data-char');
+          }
+        });
+      }
+
+      draw();
+      window.setInterval(draw, 16);
+
+      glitch();
+      window.setInterval(glitch, 100);
+    }
+  </script>
 </head>
 
 <body onload="onLoad();">
 <canvas id='noise'></canvas>
 <div id='content'>
-	<h1 id='title'><span class='glitch'>Wel</span>co<span class='glitch-compact'>m</span>e t<span class='glitch-compact'>o</span><br /><span class='glitch-rand'>lostofthought.com</span></h1>
-	<h2 id='subtitle'>A<span class='glitch-compact'>r</span>e <span class='glitch-compact'>y</span>ou <span class='glitch-rand'>lost?</span></h2>
+  <h1 id='title' class='glitch'>Welcome to<br />lostofthought.com</h1>
+  <h2 id='subtitle' class='glitch'>Are you lost?</h2>
 </div>
 </body>
 </html>
