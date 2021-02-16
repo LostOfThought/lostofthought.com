@@ -46,17 +46,23 @@
           white-space: nowrap;
       }
 
-      #title {
+      h1 {
           font-size: 5em
       }
 
-      #subtitle {
+      h2 {
           font-size: 4em
       }
 
       .glitch-split {
           text-align: center;
           display: inline-block;
+      }
+
+      .outline {
+          color: transparent;
+          -webkit-text-stroke-width: 1px;
+          -webkit-text-stroke-color: black;
       }
   </style>
   <script>
@@ -105,6 +111,26 @@
       pinkNoise.connect(audioContext.destination);
     }
     function onLoad() {
+      const components = window.location.href.split('#').map((string, index, array) => {
+        try {
+          return decodeURIComponent(string.replace(/\+/g, ' '));
+        } catch(e) {
+          return `'${string}' is not a valid URI component`
+        }
+      });
+      let contentNode = document.getElementById('content');
+      if(components.length > 1){
+        while (contentNode.firstChild) {
+          contentNode.removeChild(contentNode.firstChild);
+        }
+      }
+      components.slice(1).forEach((string, index, array) => {
+        const newNode = document.createElement(index < 1 ? 'h1' : 'h2');
+        newNode.classList.add('glitch');
+        newNode.textContent = string;
+        contentNode.appendChild(newNode);
+      });
+
       const canvas = document.getElementById('noise');
       const ctx = canvas.getContext('2d');
 
@@ -205,7 +231,7 @@
 
       function glitch(){
         Array.prototype.forEach.call(glitchElements, function (element) {
-          switch(Math.floor(Math.random() * 5)){
+          switch(Math.floor(Math.random() * 6)){
             case 0:
               element.innerText = element.getAttribute('data-char').toLowerCase();
               break;
@@ -215,6 +241,12 @@
             case 2:
               element.innerText = String.fromCharCode(Math.floor(Math.random() * (TILDE - SPACE)) + SPACE + 1);
               break;
+            case 3:
+              if(element.classList.contains('outline')) {
+                element.classList.remove('outline');
+              } else {
+                element.classList.add('outline');
+              }
             default:
               element.innerText = element.getAttribute('data-char');
           }
